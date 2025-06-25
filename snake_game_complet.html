@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Snake: Neon Survival!</title>
+<link rel="icon" href="snakelogo.png" type="image/x-icon">
+<style>
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    font-family: monospace;
+    background: black;
+    color: #0f0;
+    overflow: hidden;
+  }
+  #game {
+    display: block;
+    margin: 20px auto;
+    border: 2px solid #0f0;
+    background: #111;
+    border-radius: 10px;
+  }
+  #menuOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: black;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #0f0;
+    font-size: 18px;
+  }
+  #menuContent {
+    position: relative;
+    width: 400px;
+    background: rgba(0,30,0,0.8);
+    border: 2px solid #0f0;
+    border-radius: 10px;
+    padding: 20px;
+    box-sizing: border-box;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    overflow: hidden;
+  }
+  #menuContent h1 {
+    margin-top: 0;
+    font-size: 32px;
+    text-shadow: 0 0 8px #0f0;
+  }
+  #menuContent ul {
+    text-align: left;
+    margin: 10px 0 20px 0;
+    padding-left: 20px;
+  }
+  #menuContent button, #menuContent input[type=color] {
+    font-size: 18px;
+    padding: 10px 20px;
+    margin-top: 10px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background: #0f0;
+    color: black;
+    transition: background-color 0.3s ease;
+  }
+  #menuContent button:hover {
+    background: #0c0;
+  }
+  #gameOverMessage {
+    font-size: 36px;
+    margin-bottom: 10px;
+    text-shadow: 0 0 12px #f00;
+  }
+  #gameOverScore {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  #gameOverButtons button {
+    margin: 0 10px;
+  }
+  #musicToggle {
+    position: fixed;
+    top: 10px; right: 10px;
+    background: #0f0;
+    border: none;
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1100;
+  }
+  /* Fond animé lignes vertes */
+  #menuCanvas {
+    position: absolute;
+    top:0; left:0; width:100%; height:100%; 
+    pointer-events: none;
+    z-index: 0;
+  }
+</style>
+</head>
+<body>
+<canvas id="game" width="800" height="500" tabindex="0" aria-label="Zone de jeu Snake"></canvas>
+
+<div id="menuOverlay">
+  <canvas id="menuCanvas"></canvas>
+  <div id="menuContent" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+    <!-- Contenu menu dynamique -->
+  </div>
+</div>
+
+<button id="musicToggle" aria-label="Basculer musique de fond">🔈</button>
+
+<script>
+// === Variables globales ===
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const box = 20;
+const width = canvas.width;
+const height = canvas.height;
+
+let snake = [{ x: 9 * box, y: 10 * box }];
+let direction = 'RIGHT';
+let food = {};
+let score = 0;
+let obstacles = [];
+const obstacleCount = 7;
+
+let game = null;
+let snakeColor = '#00ff00';
+
+const menuOverlay = document.getElementById('menuOverlay');
+const menuContent = document.getElementById('menuContent');
+
+const musicToggle = document.getElementById('musicToggle');
+
+const menuCanvas = document.getElementById('menuCanvas');
+const menuCtx = menuCanvas.getContext('2d');
+menuCanvas.width = menuOverlay.clientWidth;
+menuCanvas.height = menuOverlay.clientHeight;
+// === Fond animé lignes vertes ===
+const linesCount = 30;
+let lines = [];
+for(let i=0; i<linesCount; i++){
+  lines.push({
+    x: Math.random()*menuCanvas.width,
+    y: Math.random()*menuCanvas.height,
+    length: 50 + Math.random()*150,
+    speed: 0.5 + Math.random()*1.5,
+  });
+}
+function animateMenuBg(){
+  menuCtx.clearRect(0,0,menuCanvas.width,menuCanvas.height);
+  menuCtx.strokeStyle = '#0f0';
+  menuCtx.lineWidth = 2;
+  lines.forEach(line=>{
+    line.y += line.speed;
+    if(line.y > menuCanvas.height + line.length) line.y = -line.length;
+    menuCtx.beginPath();
+    menuCtx.moveTo(line.x, line.y);
+    menuCtx.lineTo(line.x, line.y + line.length);
+    menuCtx.stroke();
+  });
+  requestAnimationFrame(animateMenuBg);
+}
+animateMenuBg();
+
+// === Fonctions du jeu ===
+
+function randomPos() {
+  return {
+    x: Math.floor(Math.random() * (width / box)) * box,
+    y: Math.floor(Math.random() * (height / box)) * box
+  };
+}
+
+function generateObstacles() {
+  obstacles = [];
+  while (obstacles.length < obstacleCount) {
+    let pos = randomPos();
+    if (pos.x === snake[0].x && pos.y === snake[0].y) continue;
+    if (obstacles.some(o => o.x === pos.x && o.y === pos.y)) continue;
+    obstacles.push(pos);
+  }
+}
+
+function placeFood() {
+  let pos;
+  do {
+    pos = randomPos();
+  } while (
+    snake.some(s => s.x === pos.x && s.y === pos.y) ||
+    obstacles.some(o => o.x === pos.x && o.y === pos.y)
+  );
+  food = pos;
+}
+
+function drawSnake() {
+  ctx.fillStyle = snakeColor;
+  snake.forEach((segment, i) => {
+    ctx.fillRect(segment.x, segment.y, box, box);
+    if(i === 0){
+      ctx.fillStyle = 'white';
+      ctx.fillRect(segment.x + 4, segment.y + 5, 4, 4);
+      ctx.fillRect(segment.x + 12, segment.y + 5, 4, 4);
+      ctx.fillStyle = 'black';
+      ctx.fillRect(segment.x + 5, segment.y + 6, 2, 2);
+      ctx.fillRect(segment.x + 13, segment.y + 6, 2, 2);
+      ctx.fillStyle = snakeColor;
+    }
+  });
+}
+
+function drawFood() {
+  ctx.fillStyle = 'red';
+  ctx.fillRect(food.x, food.y, box, box);
+}
+
+function drawObstacles() {
+  ctx.fillStyle = 'gray';
+  obstacles.forEach(o => {
+    ctx.fillRect(o.x, o.y, box, box);
+  });
+}
+
+function collision(pos, array) {
+  return array.some(item => item.x === pos.x && item.y === pos.y);
+}
+
+function gameOver() {
+  clearInterval(game);
+  showGameOver(score);
+}
+
+// === Menu et gestion du jeu ===
+
+function startGame() {
+  hideMenu();
+  snake = [{ x: 9 * box, y: 10 * box }];
+  direction = 'RIGHT';
+  score = 0;
+  generateObstacles();
+  placeFood();
+  game = setInterval(gameLoop, 100);
+  canvas.focus();
+}
+
+function showMenu() {
+  menuOverlay.style.display = 'flex';
+}
+
+function hideMenu() {
+  menuOverlay.style.display = 'none';
+}
+
+function loadMenu() {
+  showMenu();
+  menuContent.innerHTML = `
+  <img src = "snakelogo.png" width="100px" height="auto">
+    <h1 id="menuTitle">Menu</h1>
+    <p>Bienvenue ! Voici les règles :</p>
+    <ul>
+      <li>Utilisez les flèches pour déplacer le serpent.</li>
+      <li>Évitez les obstacles gris.</li>
+      <li>Ne touchez pas les bords, sinon c'est Game Over.</li>
+      <li>Ramassez la nourriture rouge pour grandir et marquer des points.</li>
+    </ul>
+    <label for="colorPicker">Choisissez la couleur du serpent :</label><br/>
+    <input type="color" id="colorPicker" value="${snakeColor}" aria-label="Choix de la couleur du serpent"/>
+    <br/>
+    <button id="startBtn">Jouer</button>
+  `;
+
+  const startBtnNew = document.getElementById('startBtn');
+  const colorPickerNew = document.getElementById('colorPicker');
+
+  startBtnNew.onclick = () => {
+    snakeColor = colorPickerNew.value;
+    startGame();
+  };
+  colorPickerNew.oninput = e => {
+    snakeColor = e.target.value;
+  };
+}
+
+function showGameOver(finalScore){
+  showMenu();
+  menuContent.innerHTML = `
+    <div id="gameOverMessage" role="alert" aria-live="assertive">GAME OVER</div>
+    <div id="gameOverScore">Votre score : ${finalScore}</div>
+    <div id="gameOverButtons">
+      <button id="replayBtn">Rejouer</button>
+      <button id="returnMenuBtn">Retour au menu</button>
+    </div>
+  `;
+  document.getElementById('replayBtn').onclick = () => {
+    startGame();
+  };
+  document.getElementById('returnMenuBtn').onclick = () => {
+    loadMenu();
+  };
+}
+
+// === Boucle principale ===
+
+function gameLoop() {
+  let headX = snake[0].x;
+  let headY = snake[0].y;
+
+  if(direction === 'LEFT') headX -= box;
+  else if(direction === 'RIGHT') headX += box;
+  else if(direction === 'UP') headY -= box;
+  else if(direction === 'DOWN') headY += box;
+
+  if(headX < 0 || headX >= width || headY < 0 || headY >= height) {
+    gameOver();
+    return;
+  }
+
+  let newHead = {x: headX, y: headY};
+
+  if(collision(newHead, snake)) {
+    gameOver();
+    return;
+  }
+
+  if(collision(newHead, obstacles)) {
+    gameOver();
+    return;
+  }
+
+  snake.unshift(newHead);
+
+  if(newHead.x === food.x && newHead.y === food.y) {
+    score++;
+    placeFood();
+  } else {
+    snake.pop();
+  }
+
+  ctx.clearRect(0, 0, width, height);
+  drawSnake();
+  drawFood();
+  drawObstacles();
+
+  ctx.fillStyle = '#0f0';
+  ctx.font = '20px monospace';
+  ctx.fillText(`Score: ${score}`, 10, 25);
+}
+
+// === Contrôles clavier ===
+
+document.addEventListener('keydown', e => {
+  if(menuOverlay.style.display === 'flex') return; // bloquer touches au menu
+  if(e.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
+  else if(e.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
+  else if(e.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
+  else if(e.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
+});
+
+// === Obstacles et nourriture au chargement ===
+
+generateObstacles();
+placeFood();
+
+// === Gestion musique de fond ===
+const audio = new Audio('level-iv-339695.mp3');
+audio.loop = true;
+audio.volume = 0.05;
+let musicOn = false;
+
+musicToggle.onclick = () => {
+  if(musicOn){
+    audio.pause();
+    musicToggle.textContent = '🔈';
+    musicOn = false;
+  } else {
+    audio.play();
+    musicToggle.textContent = '🔊';
+    musicOn = true;
+  }
+};
+
+// === Initialisation ===
+loadMenu();
+
+</script>
+
+</body>
+</html>
