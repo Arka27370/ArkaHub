@@ -1,202 +1,223 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Snake: Neon Survival!</title>
-<link rel="icon" href="snakelogo.png" type="image/x-icon">
-<style>
-  body, html {
-    margin: 0; padding: 0; height: 100%;
-    font-family: monospace;
-    background: black;
-    color: #0f0;
-    overflow: hidden;
-  }
-  #game {
-    display: block;
-    margin: 20px auto;
-    border: 2px solid #0f0;
-    background: #111;
-    border-radius: 10px;
-  }
-  #menuOverlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: black;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #0f0;
-    font-size: 18px;
-  }
-  #menuOverlay.active + #touchControls {
-    display: none !important;
-  }
-  #menuContent {
-    position: relative;
-    width: 400px;
-    background: rgba(0,30,0,0.8);
-    border: 2px solid #0f0;
-    border-radius: 10px;
-    padding: 20px;
-    box-sizing: border-box;
-    text-align: center;
-    backdrop-filter: blur(5px);
-    overflow: hidden;
-  }
-  #menuContent h1 {
-    margin-top: 0;
-    font-size: 32px;
-    text-shadow: 0 0 8px #0f0;
-  }
-  #menuContent ul {
-    text-align: left;
-    margin: 10px 0 20px 0;
-    padding-left: 20px;
-  }
-  #menuContent button, #menuContent input[type=color], #menuContent input[type=number] {
-    font-size: 18px;
-    padding: 10px 20px;
-    margin-top: 10px;
-    cursor: pointer;
-    border: none;
-    border-radius: 5px;
-    background: #0f0;
-    color: black;
-    transition: background-color 0.3s ease;
-  }
-  #menuContent button:hover {
-    background: #0c0;
-  }
-  #gameOverMessage {
-    font-size: 36px;
-    margin-bottom: 10px;
-    text-shadow: 0 0 12px #f00;
-  }
-  #gameOverScore {
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-  #gameOverButtons button {
-    margin: 0 10px;
-  }
-  #musicToggle {
-    position: fixed;
-    top: 10px; right: 10px;
-    background: #0f0;
-    border: none;
-    padding: 8px 12px;
-    font-size: 14px;
-    border-radius: 5px;
-    cursor: pointer;
-    z-index: 1100;
-  }
-  #menuCanvas {
-    position: absolute;
-    top:0; left:0; width:100%; height:100%; 
-    pointer-events: none;
-    z-index: 0;
-  }
-  #countdownOverlay {
-    position: fixed;
-    top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.85);
-    color: #0f0;
-    font-size: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1200;
-    font-weight: bold;
-    font-family: monospace;
-  }
-  #pauseButton {
-    position: fixed;
-    top: 10px; left: 10px;
-    background: #0f0;
-    border: none;
-    padding: 8px 12px;
-    font-size: 14px;
-    border-radius: 5px;
-    cursor: pointer;
-    z-index: 1100;
-    display: none;
-  }
-
-  @media (min-width: 801px) {
-    #touchControls {
-      display: none;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snake: Neon Survival!</title>
+  <link rel="icon" href="snakelogo.png" type="image/x-icon">
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: monospace;
+      background: black;
+      color: #0f0;
+      overflow: hidden;
     }
-  }
-</style>
+    canvas#game {
+      display: block;
+      margin: 20px auto;
+      border: 2px solid #0f0;
+      background: #111;
+      border-radius: 10px;
+    }
+    #menuOverlay, #pauseOverlay, #countdownOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #0f0;
+      font-size: 18px;
+    }
+
+    #menuOverlay {
+      background: black;
+      overflow-y: auto;
+    }
+
+    #menuBackground {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(0deg, #0f0 0px, #0f0 1px, transparent 1px, transparent 20px);
+      animation: scrollLines 5s linear infinite;
+      z-index: -1;
+      opacity: 0.2;
+    }
+
+    @keyframes scrollLines {
+      0% { background-position-y: 0; }
+      100% { background-position-y: 20px; }
+    }
+
+    #menuContent, #pauseContent, #countdownContent {
+      position: relative;
+      width: 400px;
+      background: rgba(0,30,0,0.85);
+      border: 2px solid #0f0;
+      border-radius: 10px;
+      padding: 20px;
+      box-sizing: border-box;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+
+    button, input[type=color], input[type=number] {
+      font-size: 16px;
+      padding: 10px 15px;
+      margin: 10px 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #0f0;
+      color: black;
+    }
+
+    #musicToggle, #pauseButton {
+      position: fixed;
+      top: 10px;
+      background: #0f0;
+      border: none;
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 1100;
+    }
+
+    #musicToggle { right: 10px; }
+    #pauseButton { left: 10px; }
+
+    #mobileControls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      z-index: 1050;
+    }
+
+    .arrowBtn {
+      background: #0f0;
+      border: none;
+      color: black;
+      padding: 15px;
+      margin: 5px;
+      font-size: 20px;
+      border-radius: 50%;
+    }
+
+    #countdownOverlay {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    #countdownContent {
+      font-size: 60px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 800px) {
+      #pauseButton {
+        display: block;
+      }
+      #mobileControls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
 </head>
 <body>
-<canvas id="game" width="800" height="500" tabindex="0" aria-label="Zone de jeu Snake"></canvas>
+<canvas id="game" width="800" height="500" tabindex="0"></canvas>
 
 <div id="menuOverlay">
-  <canvas id="menuCanvas"></canvas>
-  <div id="menuContent" role="dialog" aria-modal="true" aria-labelledby="menuTitle"></div>
+  <div id="menuBackground"></div>
+  <div id="menuContent"></div>
 </div>
 
-<button id="musicToggle" aria-label="Basculer musique de fond">🔈</button>
-<button id="pauseButton" aria-label="Pause">Pause</button>
+<div id="pauseOverlay">
+  <div id="pauseContent">
+    <h2>Pause</h2>
+    <label>Nombre d'obstacles :</label>
+    <input type="number" id="obstacleCountInput" value="7" min="0" max="30" /><br>
+    <label>Nombre de monstres :</label>
+    <input type="number" id="monsterCountInput" value="3" min="0" max="10" /><br>
+    <button id="resumeBtn">Reprendre</button>
+    <button id="pauseToMenuBtn">Retour au menu</button>
+  </div>
+</div>
 
-<div id="countdownOverlay" style="display:none;"></div>
+<div id="countdownOverlay">
+  <div id="countdownContent">3</div>
+</div>
+
+<div id="mobileControls">
+  <button class="arrowBtn" onclick="setDirection('UP')">⬆️</button><br>
+  <button class="arrowBtn" onclick="setDirection('LEFT')">⬅️</button>
+  <button class="arrowBtn" onclick="setDirection('DOWN')">⬇️</button>
+  <button class="arrowBtn" onclick="setDirection('RIGHT')">➡️</button>
+</div>
+
+<button id="musicToggle">🔈</button>
+<button id="pauseButton">⏸️</button>
 
 <script>
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-
 const box = 20;
+
 let snake = [{ x: 9 * box, y: 10 * box }];
 let direction = 'RIGHT';
 let food = {};
 let score = 0;
 let obstacles = [];
-let obstacleCount = 7; // Variable modifiable au menu pause/menu
-let game = null;
+let obstacleCount = 7;
+let monsterCount = 3; // futur usage
 let snakeColor = '#00ff00';
+let game = null;
 
 const menuOverlay = document.getElementById('menuOverlay');
 const menuContent = document.getElementById('menuContent');
-const musicToggle = document.getElementById('musicToggle');
+const pauseOverlay = document.getElementById('pauseOverlay');
 const pauseButton = document.getElementById('pauseButton');
+const resumeBtn = document.getElementById('resumeBtn');
+const pauseToMenuBtn = document.getElementById('pauseToMenuBtn');
+const obstacleCountInput = document.getElementById('obstacleCountInput');
+const monsterCountInput = document.getElementById('monsterCountInput');
+
 const countdownOverlay = document.getElementById('countdownOverlay');
+const countdownContent = document.getElementById('countdownContent');
 
-const menuCanvas = document.getElementById('menuCanvas');
-const menuCtx = menuCanvas.getContext('2d');
-menuCanvas.width = menuOverlay.clientWidth;
-menuCanvas.height = menuOverlay.clientHeight;
+// Musique
+const musicToggle = document.getElementById('musicToggle');
+const audio = new Audio('level-iv-339695.mp3');
+audio.loop = true;
+audio.volume = 0.05;
+let musicOn = false;
 
-// Fond animé du menu
-const linesCount = 30;
-let lines = [];
-for(let i=0; i<linesCount; i++){
-  lines.push({
-    x: Math.random()*menuCanvas.width,
-    y: Math.random()*menuCanvas.height,
-    length: 50 + Math.random()*150,
-    speed: 0.5 + Math.random()*1.5,
-  });
+musicToggle.onclick = () => {
+  musicOn = !musicOn;
+  musicToggle.textContent = musicOn ? '🔊' : '🔈';
+  musicOn ? audio.play() : audio.pause();
+};
+
+function resizeCanvasForDevice() {
+  const isPortrait = window.innerHeight > window.innerWidth;
+  if (window.innerWidth < 801 && isPortrait) {
+    canvas.width = Math.min(window.innerWidth - 20, 400);
+    canvas.height = Math.floor(canvas.width * 1.25);
+  } else if (window.innerWidth < 801) {
+    canvas.width = 600;
+    canvas.height = 375;
+  } else {
+    canvas.width = 800;
+    canvas.height = 500;
+  }
 }
-function animateMenuBg(){
-  menuCtx.clearRect(0,0,menuCanvas.width,menuCanvas.height);
-  menuCtx.strokeStyle = '#0f0';
-  menuCtx.lineWidth = 2;
-  lines.forEach(line=>{
-    line.y += line.speed;
-    if(line.y > menuCanvas.height + line.length) line.y = -line.length;
-    menuCtx.beginPath();
-    menuCtx.moveTo(line.x, line.y);
-    menuCtx.lineTo(line.x, line.y + line.length);
-    menuCtx.stroke();
-  });
-  requestAnimationFrame(animateMenuBg);
-}
-animateMenuBg();
+window.addEventListener('resize', resizeCanvasForDevice);
+resizeCanvasForDevice();
 
 function randomPos() {
   return {
@@ -258,167 +279,28 @@ function collision(pos, array) {
 
 function gameOver() {
   clearInterval(game);
-  showGameOver(score);
-  pauseButton.style.display = 'none';
-}
-
-function startGame() {
-  hideMenu();
-  countdownOverlay.style.display = 'flex';
-  let countdown = 3;
-  countdownOverlay.textContent = countdown;
-  pauseButton.style.display = 'block';
-
-  // Cache flèches tactiles si tu en avais
-  const touchControls = document.getElementById('touchControls');
-  if(touchControls) touchControls.style.display = 'none';
-
-  // Compte à rebours 3s avant démarrer
-  const countdownInterval = setInterval(() => {
-    countdown--;
-    if(countdown === 0){
-      countdownOverlay.style.display = 'none';
-      clearInterval(countdownInterval);
-      snake = [{ x: 9 * box, y: 10 * box }];
-      direction = 'RIGHT';
-      score = 0;
-      generateObstacles();
-      placeFood();
-      game = setInterval(gameLoop, 100);
-      canvas.focus();
-    } else {
-      countdownOverlay.textContent = countdown;
-    }
-  }, 1000);
-}
-
-function showMenu() {
-  menuOverlay.style.display = 'flex';
-  menuOverlay.classList.add('active');
-  pauseButton.style.display = 'none';
-}
-
-function hideMenu() {
-  menuOverlay.style.display = 'none';
-  menuOverlay.classList.remove('active');
-}
-
-function loadMenu() {
-  showMenu();
-  menuContent.innerHTML = `
-    <h1 id="menuTitle">Snake Néon Vert</h1>
-    <p>Règles :</p>
-    <ul>
-      <li>Déplacez le serpent avec les flèches clavier ou les boutons tactiles.</li>
-      <li>Évitez les obstacles gris.</li>
-      <li>Mangez la nourriture rouge pour grandir.</li>
-      <li>Vous pouvez changer la couleur du serpent.</li>
-      <li>Appuyez sur "P" ou le bouton pause pour mettre en pause.</li>
-    </ul>
-    <label for="colorPicker">Couleur serpent :</label><br/>
-    <input type="color" id="colorPicker" value="${snakeColor}" aria-label="Choix couleur serpent"><br/>
-    <label for="obstacleCountInput">Nombre d'obstacles (1-15) :</label><br/>
-    <input type="number" id="obstacleCountInput" min="1" max="15" value="${obstacleCount}" aria-label="Nombre d'obstacles"><br/><br/>
-    <button id="startBtn">Jouer</button>
-  `;
-
-  document.getElementById('startBtn').onclick = () => {
-    snakeColor = document.getElementById('colorPicker').value;
-    let count = parseInt(document.getElementById('obstacleCountInput').value);
-    if (isNaN(count) || count < 1) count = 1;
-    else if (count > 15) count = 15;
-    obstacleCount = count;
-    startGame();
-  };
-}
-
-function showPauseMenu() {
-  clearInterval(game);
-  menuOverlay.style.display = 'flex';
-  menuOverlay.classList.add('active');
-  pauseButton.style.display = 'none';
-
-  menuContent.innerHTML = `
-    <h1>Pause</h1>
-    <label for="colorPickerPause">Couleur serpent :</label><br/>
-    <input type="color" id="colorPickerPause" value="${snakeColor}" aria-label="Choix couleur serpent"><br/>
-    <label for="obstacleCountPause">Nombre d'obstacles (1-15) :</label><br/>
-    <input type="number" id="obstacleCountPause" min="1" max="15" value="${obstacleCount}" aria-label="Nombre d'obstacles"><br/><br/>
-    <button id="resumeBtn">Reprendre</button>
-    <button id="menuBtn">Retour au menu</button>
-  `;
-
-  document.getElementById('resumeBtn').onclick = () => {
-    snakeColor = document.getElementById('colorPickerPause').value;
-    let count = parseInt(document.getElementById('obstacleCountPause').value);
-    if (isNaN(count) || count < 1) count = 1;
-    else if (count > 15) count = 15;
-    obstacleCount = count;
-    generateObstacles();
-    placeFood();
-    game = setInterval(gameLoop, 100);
-    menuOverlay.style.display = 'none';
-    menuOverlay.classList.remove('active');
-    pauseButton.style.display = 'block';
-    canvas.focus();
-  };
-
-  document.getElementById('menuBtn').onclick = () => {
-    loadMenu();
-  };
-}
-
-function showGameOver(finalScore) {
-  menuOverlay.style.display = 'flex';
-  menuOverlay.classList.add('active');
-  pauseButton.style.display = 'none';
-
-  menuContent.innerHTML = `
-    <div id="gameOverMessage">Game Over</div>
-    <div id="gameOverScore">Score : ${finalScore}</div>
-    <div id="gameOverButtons">
-      <button id="retryBtn">Rejouer</button>
-      <button id="menuBtnGameOver">Retour au menu</button>
-    </div>
-  `;
-
-  document.getElementById('retryBtn').onclick = () => {
-    startGame();
-  };
-  document.getElementById('menuBtnGameOver').onclick = () => {
-    loadMenu();
-  };
+  game = null;
+  showMenu(`GAME OVER<br>Score : ${score}`);
 }
 
 function gameLoop() {
-  // Boucle du jeu principale, ici on ne modifie pas la logique collision ou serpent
+  let headX = snake[0].x;
+  let headY = snake[0].y;
 
-  // Calcul nouvelle tête serpent
-  let head = { ...snake[0] };
-  if (direction === 'LEFT') head.x -= box;
-  else if (direction === 'RIGHT') head.x += box;
-  else if (direction === 'UP') head.y -= box;
-  else if (direction === 'DOWN') head.y += box;
+  if(direction === 'LEFT') headX -= box;
+  else if(direction === 'RIGHT') headX += box;
+  else if(direction === 'UP') headY -= box;
+  else if(direction === 'DOWN') headY += box;
 
-  // Collision murs
-  if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-    gameOver();
-    return;
-  }
-  // Collision avec obstacles
-  if (collision(head, obstacles)) {
-    gameOver();
-    return;
-  }
-  // Collision avec corps serpent
-  if (collision(head, snake)) {
-    gameOver();
-    return;
-  }
+  if(headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height) return gameOver();
 
-  snake.unshift(head);
+  const newHead = {x: headX, y: headY};
 
-  if (head.x === food.x && head.y === food.y) {
+  if(collision(newHead, snake) || collision(newHead, obstacles)) return gameOver();
+
+  snake.unshift(newHead);
+
+  if(newHead.x === food.x && newHead.y === food.y) {
     score++;
     placeFood();
   } else {
@@ -426,55 +308,108 @@ function gameLoop() {
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawObstacles();
-  drawFood();
   drawSnake();
+  drawFood();
+  drawObstacles();
 
-  // Affichage score
   ctx.fillStyle = '#0f0';
-  ctx.font = '18px monospace';
-  ctx.fillText(`Score: ${score}`, 10, 20);
+  ctx.font = '20px monospace';
+  ctx.fillText(`Score: ${score}`, 10, 25);
 }
 
-// Gestion direction clavier + tactile (flèches cachées en jeu)
-window.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft' && direction !== 'RIGHT') direction = 'LEFT';
-  else if (e.key === 'ArrowRight' && direction !== 'LEFT') direction = 'RIGHT';
-  else if (e.key === 'ArrowUp' && direction !== 'DOWN') direction = 'UP';
-  else if (e.key === 'ArrowDown' && direction !== 'UP') direction = 'DOWN';
-  else if (e.key.toLowerCase() === 'p') {
-    if (game) {
-      showPauseMenu();
-    }
+function startGame() {
+  hideMenu();
+  snake = [{ x: 9 * box, y: 10 * box }];
+  direction = 'RIGHT';
+  score = 0;
+  obstacleCount = parseInt(obstacleCountInput.value);
+  monsterCount = parseInt(monsterCountInput.value);
+  generateObstacles();
+  placeFood();
+  startCountdown(() => game = setInterval(gameLoop, 100));
+  canvas.focus();
+}
+
+function showMenu(content = '') {
+  menuOverlay.style.display = 'flex';
+  menuContent.innerHTML = `
+    <h1>Snake Neon</h1>
+    ${content ? `<div style="margin-bottom:10px">${content}</div>` : ''}
+    <p><strong>Règles :</strong><br>
+    Utilisez les flèches (ou le joystick mobile) pour diriger le serpent.<br>
+    Évitez les murs, obstacles et vous-même. Mangez les pommes pour grandir.<br></p>
+    <label>Couleur du serpent :</label><br/>
+    <input type="color" id="colorPicker" value="${snakeColor}"/><br/>
+    <label>Nombre d'obstacles :</label>
+    <input type="number" id="obstacleCountInput" value="7" min="0" max="30" /><br>
+    <label>Nombre de monstres :</label>
+    <input type="number" id="monsterCountInput" value="3" min="0" max="10" /><br>
+    <button id="playBtn">Jouer</button>
+  `;
+  document.getElementById('colorPicker').oninput = e => snakeColor = e.target.value;
+  document.getElementById('playBtn').onclick = startGame;
+}
+
+function hideMenu() {
+  menuOverlay.style.display = 'none';
+}
+
+function togglePause(forceOff = false) {
+  if (forceOff || pauseOverlay.style.display === 'flex') {
+    pauseOverlay.style.display = 'none';
+    startCountdown(() => game = setInterval(gameLoop, 100));
+    pauseButton.textContent = '⏸️';
+  } else {
+    if (game) clearInterval(game);
+    game = null;
+    pauseOverlay.style.display = 'flex';
+    obstacleCountInput.value = obstacleCount;
+    monsterCountInput.value = monsterCount;
+    pauseButton.textContent = '▶️';
   }
+}
+
+function startCountdown(callback) {
+  let count = 3;
+  countdownContent.textContent = count;
+  countdownOverlay.style.display = 'flex';
+  const interval = setInterval(() => {
+    count--;
+    if (count <= 0) {
+      clearInterval(interval);
+      countdownOverlay.style.display = 'none';
+      callback();
+    } else {
+      countdownContent.textContent = count;
+    }
+  }, 1000);
+}
+
+function setDirection(dir) {
+  if (dir === 'LEFT' && direction !== 'RIGHT') direction = 'LEFT';
+  if (dir === 'RIGHT' && direction !== 'LEFT') direction = 'RIGHT';
+  if (dir === 'UP' && direction !== 'DOWN') direction = 'UP';
+  if (dir === 'DOWN' && direction !== 'UP') direction = 'DOWN';
+}
+
+pauseButton.onclick = togglePause;
+resumeBtn.onclick = () => togglePause(false);
+pauseToMenuBtn.onclick = () => {
+  togglePause(true);
+  showMenu();
+};
+
+document.addEventListener('keydown', e => {
+  if(menuOverlay.style.display === 'flex') return;
+  if(e.key === 'ArrowLeft') setDirection('LEFT');
+  else if(e.key === 'ArrowRight') setDirection('RIGHT');
+  else if(e.key === 'ArrowUp') setDirection('UP');
+  else if(e.key === 'ArrowDown') setDirection('DOWN');
+  else if(e.key.toLowerCase() === 'p') togglePause();
 });
 
-// Bouton pause visible sur mobile et desktop
-pauseButton.onclick = () => {
-  if (game) {
-    showPauseMenu();
-  }
-};
-
-// Gestion musique de fond simple
-let musicPlaying = false;
-let audio = new Audio('https://cdn.pixabay.com/download/audio/2022/03/25/audio_3ae908ee31.mp3?filename=calm-ambient-background-11047.mp3');
-audio.loop = true;
-musicToggle.onclick = () => {
-  if (musicPlaying) {
-    audio.pause();
-    musicToggle.textContent = '🔈';
-  } else {
-    audio.play();
-    musicToggle.textContent = '🔊';
-  }
-  musicPlaying = !musicPlaying;
-};
-
-// Au chargement, on lance le menu
-loadMenu();
-
+showMenu();
 </script>
-
 </body>
 </html>
+
