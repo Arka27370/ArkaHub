@@ -3,149 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Snake: Neon Survival!</title>
+  <title>Snake: Néon Survival!</title>
   <link rel="icon" href="snakelogo.png" type="image/x-icon">
   <style>
-    body, html {
-      margin: 0; padding: 0; height: 100%;
-      font-family: monospace;
-      background: black;
-      color: #0f0;
-      overflow: hidden;
-    }
-    canvas#game {
-      display: block;
-      margin: 20px auto;
-      border: 2px solid #0f0;
-      background: #111;
-      border-radius: 10px;
-    }
+    body, html { margin:0; padding:0; height:100%; background:black; overflow:hidden; font-family:monospace; color:#0f0; }
+    canvas#game { display:block; margin:20px auto; border:2px solid #0f0; background:#111; border-radius:10px; }
     #menuOverlay, #pauseOverlay, #countdownOverlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 1000;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #0f0;
-      font-size: 18px;
+      position:fixed; top:0; left:0; right:0; bottom:0; display:none;
+      z-index:1000; align-items:center; justify-content:center; flex-direction:column;
+      color:#0f0;
     }
-
-    #menuOverlay {
-      background: black;
-      overflow-y: auto;
-    }
-
-    #menuBackground {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: repeating-linear-gradient(0deg, #0f0 0px, #0f0 1px, transparent 1px, transparent 20px);
-      animation: scrollLines 5s linear infinite;
-      z-index: -1;
-      opacity: 0.2;
-    }
-
-    @keyframes scrollLines {
-      0% { background-position-y: 0; }
-      100% { background-position-y: 20px; }
-    }
-
+    #menuOverlay { background:black; overflow:auto; }
+    #menuBackground { position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1; }
     #menuContent, #pauseContent, #countdownContent {
-      position: relative;
-      width: 400px;
-      background: rgba(0,30,0,0.85);
-      border: 2px solid #0f0;
-      border-radius: 10px;
-      padding: 20px;
-      box-sizing: border-box;
-      text-align: center;
-      backdrop-filter: blur(5px);
+      position:relative; width:360px; background:rgba(0,30,0,0.85);
+      border:2px solid #0f0; border-radius:10px; padding:20px; text-align:center;
     }
-
     button, input[type=color], input[type=number] {
-      font-size: 16px;
-      padding: 10px 15px;
-      margin: 10px 5px;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      background: #0f0;
-      color: black;
+      padding:10px 15px; margin:8px; border:none; border-radius:5px;
+      background:#0f0; color:black; font-size:16px; cursor:pointer;
     }
-
     #musicToggle, #pauseButton {
-      position: fixed;
-      top: 10px;
-      background: #0f0;
-      border: none;
-      padding: 8px 12px;
-      font-size: 14px;
-      border-radius: 5px;
-      cursor: pointer;
-      z-index: 1100;
+      position:fixed; top:10px; padding:8px 12px; font-size:14px;
+      background:#0f0; border:none; border-radius:5px; cursor:pointer; z-index:1100;
     }
-
-    #musicToggle { right: 10px; }
-    #pauseButton { left: 10px; }
-
+    #musicToggle { right:10px; } #pauseButton { left:10px; }
     #mobileControls {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: none;
-      z-index: 1050;
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      display:none; z-index:1050;
     }
-
     .arrowBtn {
-      background: #0f0;
-      border: none;
-      color: black;
-      padding: 15px;
-      margin: 5px;
-      font-size: 20px;
-      border-radius: 50%;
+      width:60px; height:60px; margin:5px;
+      border:2px solid #0f0; border-radius:50%; background:transparent;
+      color:#0f0; font-size:24px;
+      box-shadow: 0 0 8px #0f0;
+      cursor:pointer;
     }
-
-    #countdownOverlay {
-      background: rgba(0, 0, 0, 0.8);
-    }
-
-    #countdownContent {
-      font-size: 60px;
-      font-weight: bold;
-    }
-
-    @media (max-width: 800px) {
-      #pauseButton {
-        display: block;
-      }
-      #mobileControls {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-    }
+    #countdownOverlay { background:rgba(0,0,0,0.8); display:flex; }
+    #countdownContent { font-size:64px; }
+    @media(max-width:800px) { #pauseButton{display:block;} }
   </style>
 </head>
 <body>
-<canvas id="game" width="800" height="500" tabindex="0"></canvas>
+<canvas id="game" tabindex="0"></canvas>
 
 <div id="menuOverlay">
-  <div id="menuBackground"></div>
+  <canvas id="menuBackground"></canvas>
   <div id="menuContent"></div>
 </div>
 
 <div id="pauseOverlay">
   <div id="pauseContent">
     <h2>Pause</h2>
-    <label>Nombre d'obstacles :</label>
-    <input type="number" id="obstacleCountInput" value="7" min="0" max="30" /><br>
-    <label>Nombre de monstres :</label>
-    <input type="number" id="monsterCountInput" value="3" min="0" max="10" /><br>
+    <label>Obstacles :</label><input type="number" id="obstacleCountInput" min="0" max="30"><br>
+    <label>Monstres :</label><input type="number" id="monsterCountInput" min="0" max="10"><br>
     <button id="resumeBtn">Reprendre</button>
-    <button id="pauseToMenuBtn">Retour au menu</button>
+    <button id="pauseToMenuBtn">Retour menu</button>
   </div>
 </div>
 
@@ -154,72 +67,59 @@
 </div>
 
 <div id="mobileControls">
-  <button class="arrowBtn" onclick="setDirection('UP')">⬆️</button><br>
   <button class="arrowBtn" onclick="setDirection('LEFT')">⬅️</button>
+  <button class="arrowBtn" onclick="setDirection('UP')">⬆️</button><br>
   <button class="arrowBtn" onclick="setDirection('DOWN')">⬇️</button>
   <button class="arrowBtn" onclick="setDirection('RIGHT')">➡️</button>
+ 
 </div>
 
 <button id="musicToggle">🔈</button>
 <button id="pauseButton">⏸️</button>
 
 <script>
-const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
-const box = 20;
-
-let snake = [{ x: 9 * box, y: 10 * box }];
-let direction = 'RIGHT';
-let food = {};
-let score = 0;
-let obstacles = [];
-let obstacleCount = 7;
-let monsterCount = 3; // futur usage
-let snakeColor = '#00ff00';
-let game = null;
-
-const menuOverlay = document.getElementById('menuOverlay');
-const menuContent = document.getElementById('menuContent');
-const pauseOverlay = document.getElementById('pauseOverlay');
-const pauseButton = document.getElementById('pauseButton');
-const resumeBtn = document.getElementById('resumeBtn');
-const pauseToMenuBtn = document.getElementById('pauseToMenuBtn');
-const obstacleCountInput = document.getElementById('obstacleCountInput');
-const monsterCountInput = document.getElementById('monsterCountInput');
-
-const countdownOverlay = document.getElementById('countdownOverlay');
+const canvas = document.getElementById('game'), ctx = canvas.getContext('2d'), box = 20;
+const mbgCanvas = document.getElementById('menuBackground'), mbgCtx = mbgCanvas.getContext('2d');
+const menuOv = document.getElementById('menuOverlay'), pauseOv = document.getElementById('pauseOverlay'), cntOv = document.getElementById('countdownOverlay');
+const menuCt = document.getElementById('menuContent');
 const countdownContent = document.getElementById('countdownContent');
+const musicBtn = document.getElementById('musicToggle'), pauseBtn = document.getElementById('pauseButton');
+const resumeBtn = document.getElementById('resumeBtn'), pmBtn = document.getElementById('pauseToMenuBtn');
+const mobCtr = document.getElementById('mobileControls');
 
-// Musique
-const musicToggle = document.getElementById('musicToggle');
+let snake, direction, food, score, obstacles, monsters;
+let obstacleCount, monsterCount, snakeColor, bestScore = localStorage.getItem('bestSnakeScore') || 0;
+let game = null, musicOn = false;
 const audio = new Audio('level-iv-339695.mp3');
-audio.loop = true;
-audio.volume = 0.05;
-let musicOn = false;
+audio.loop = true; audio.volume = 0.05;
 
-musicToggle.onclick = () => {
+musicBtn.onclick = () => {
   musicOn = !musicOn;
-  musicToggle.textContent = musicOn ? '🔊' : '🔈';
+  musicBtn.textContent = musicOn ? '🔊' : '🔈';
   musicOn ? audio.play() : audio.pause();
 };
 
-function resizeCanvasForDevice() {
-  const isPortrait = window.innerHeight > window.innerWidth;
-  if (window.innerWidth < 801 && isPortrait) {
-    canvas.width = Math.min(window.innerWidth - 20, 400);
-    canvas.height = Math.floor(canvas.width * 1.25);
-  } else if (window.innerWidth < 801) {
-    canvas.width = 600;
-    canvas.height = 375;
-  } else {
-    canvas.width = 800;
-    canvas.height = 500;
-  }
-}
-window.addEventListener('resize', resizeCanvasForDevice);
-resizeCanvasForDevice();
+pauseBtn.onclick = () => togglePause(false);
+resumeBtn.onclick = () => togglePause(false);
+pmBtn.onclick = () => { togglePause(true); showMenu(); };
 
-function randomPos() {
+function resizeGame() {
+  const isP = window.innerHeight > window.innerWidth;
+  if(window.innerWidth < 801 && isP) {
+    canvas.width = Math.min(window.innerWidth - 20, 400);
+    canvas.height = canvas.width * 1.25;
+  } else if(window.innerWidth < 801) {
+    canvas.width = 600; canvas.height = 375;
+  } else {
+    canvas.width = 800; canvas.height = 500;
+  }
+  mbgCanvas.width = window.innerWidth;
+  mbgCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeGame);
+resizeGame();
+
+function rndPos() {
   return {
     x: Math.floor(Math.random() * (canvas.width / box)) * box,
     y: Math.floor(Math.random() * (canvas.height / box)) * box
@@ -228,53 +128,190 @@ function randomPos() {
 
 function generateObstacles() {
   obstacles = [];
-  while (obstacles.length < obstacleCount) {
-    let pos = randomPos();
-    if (pos.x === snake[0].x && pos.y === snake[0].y) continue;
-    if (obstacles.some(o => o.x === pos.x && o.y === pos.y)) continue;
-    obstacles.push(pos);
+  for(let i = 0; i < obstacleCount; i++) {
+    let p;
+    do { p = rndPos(); } while(collide(p, snake) || collide(p, obstacles));
+    obstacles.push(p);
+  }
+}
+
+function generateMonsters() {
+  monsters = [];
+  for(let i = 0; i < monsterCount; i++) {
+    let p, dir;
+    do { p = rndPos(); } while(collide(p, snake) || collide(p, obstacles) || collide(p, monsters));
+    dir = Math.random() < 0.5 ? 'vert' : 'horiz';
+    monsters.push({ x: p.x, y: p.y, dir, speed: 1 });
   }
 }
 
 function placeFood() {
-  let pos;
-  do {
-    pos = randomPos();
-  } while (
-    snake.some(s => s.x === pos.x && s.y === pos.y) ||
-    obstacles.some(o => o.x === pos.x && o.y === pos.y)
-  );
-  food = pos;
+  let p;
+  do { p = rndPos(); } while(collide(p, snake) || collide(p, obstacles) || collide(p, monsters));
+  food = p;
 }
 
-function drawSnake() {
-  ctx.fillStyle = snakeColor;
-  snake.forEach((segment, i) => {
-    ctx.fillRect(segment.x, segment.y, box, box);
-    if(i === 0){
+function collide(p, arr) {
+  return arr.some(o => o.x === p.x && o.y === p.y);
+}
+
+function drawGame() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  snake.forEach((s, i) => {
+    ctx.fillStyle = snakeColor;
+    ctx.fillRect(s.x, s.y, box, box);
+    if(i === 0) {
       ctx.fillStyle = 'white';
-      ctx.fillRect(segment.x + 4, segment.y + 5, 4, 4);
-      ctx.fillRect(segment.x + 12, segment.y + 5, 4, 4);
+      ctx.fillRect(s.x + 4, s.y + 5, 4, 4);
+      ctx.fillRect(s.x + 12, s.y + 5, 4, 4);
       ctx.fillStyle = 'black';
-      ctx.fillRect(segment.x + 5, segment.y + 6, 2, 2);
-      ctx.fillRect(segment.x + 13, segment.y + 6, 2, 2);
-      ctx.fillStyle = snakeColor;
+      ctx.fillRect(s.x + 5, s.y + 6, 2, 2);
+      ctx.fillRect(s.x + 13, s.y + 6, 2, 2);
+    }
+  });
+
+  ctx.fillStyle = 'red';
+  ctx.fillRect(food.x, food.y, box, box);
+
+  ctx.fillStyle = 'gray';
+  obstacles.forEach(o => ctx.fillRect(o.x, o.y, box, box));
+
+  ctx.fillStyle = '#ff00ff';
+  monsters.forEach(m => {
+    ctx.fillRect(m.x, m.y, box, box);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(m.x + 4, m.y + 5, 4, 4);
+    ctx.fillRect(m.x + 12, m.y + 5, 4, 4);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(m.x + 5, m.y + 6, 2, 2);
+    ctx.fillRect(m.x + 13, m.y + 6, 2, 2);
+  });
+
+  ctx.fillStyle = '#0f0';
+  ctx.font = '20px monospace';
+  ctx.fillText(`Score: ${score}`, 10, 25);
+  ctx.fillText(`Best: ${bestScore}`, 10, 50);
+}
+
+function updateMonsters() {
+  monsters.forEach(m => {
+    if(m.dir === 'vert') m.y += m.speed * box;
+    else m.x += m.speed * box;
+    if(m.x < 0 || m.x >= canvas.width || m.y < 0 || m.y >= canvas.height) {
+      m.speed *= -1;
     }
   });
 }
 
-function drawFood() {
-  ctx.fillStyle = 'red';
-  ctx.fillRect(food.x, food.y, box, box);
+function gameLoop() {
+  updateMonsters();
+  let head = { x: snake[0].x, y: snake[0].y };
+  if(direction === 'LEFT') head.x -= box;
+  if(direction === 'RIGHT') head.x += box;
+  if(direction === 'UP') head.y -= box;
+  if(direction === 'DOWN') head.y += box;
+
+  if(head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height
+     || collide(head, snake) || collide(head, obstacles) || collide(head, monsters)) {
+    return gameOver();
+  }
+
+  snake.unshift(head);
+
+  if(head.x === food.x && head.y === food.y) {
+    score++;
+    if(score > bestScore) {
+      bestScore = score;
+      localStorage.setItem('bestSnakeScore', bestScore);
+    }
+    placeFood();
+  } else {
+    snake.pop();
+  }
+
+  drawGame();
 }
 
-function drawObstacles() {
-  ctx.fillStyle = 'gray';
-  obstacles.forEach(o => ctx.fillRect(o.x, o.y, box, box));
+function startCountdown(cb) {
+  mobCtr.style.display = 'none';
+  cntOv.style.display = 'flex';
+  let c = 3;
+  countdownContent.textContent = c;
+  const interval = setInterval(() => {
+    c--;
+    if(c <= 0) {
+      clearInterval(interval);
+      cntOv.style.display = 'none';
+      mobCtr.style.display = (window.innerWidth < 801) ? 'flex' : 'none';
+      cb();
+    } else {
+      countdownContent.textContent = c;
+    }
+  }, 1000);
 }
 
-function collision(pos, array) {
-  return array.some(item => item.x === pos.x && item.y === pos.y);
+function startGame() {
+  hideMenu();
+  snake = [{ x: 9*box, y: 10*box }];
+  direction = 'RIGHT';
+  score = 0;
+  obstacleCount = parseInt(document.getElementById('obstacleCountInput').value);
+  monsterCount = parseInt(document.getElementById('monsterCountInput').value);
+  snakeColor = document.getElementById('colorPicker') ? document.getElementById('colorPicker').value : snakeColor;
+  generateObstacles();
+  generateMonsters();
+  placeFood();
+  startCountdown(() => game = setInterval(gameLoop, 100));
+  canvas.focus();
+}
+
+function showMenu(msg = '') {
+  mobCtr.style.display = 'none';
+  cntOv.style.display = 'none';
+  pauseOv.style.display = 'none';
+  menuOv.style.display = 'flex';
+  menuCt.innerHTML = `
+    <h1><img src = snakelogo.png height="120" width="120"></h1>
+    ${msg ? `<div>${msg}</div>` : ''}
+    <p><strong>Règles :</strong><br> - 🧱Évitez obstacles, 👿monstres, murs et vous-même.<br>🍎Mangez les pommes rouges pour grandir.</p>
+    <p><strong> 💥Meilleur : ${bestScore}</strong></p>
+    <label>🎨Couleur serpent :</label><br>
+    <input type="color" id="colorPicker" value="${snakeColor}"><br>
+    <label> 🧱Nb obstacles:</label><input id="obstacleCountInput" type="number" value="${obstacleCount}" min="0" max="30"><br>
+    <label> 👿Nb monstres:</label><input id="monsterCountInput" type="number" value="${monsterCount}" min="0" max="10"><br>
+    <button id="playBtn">🚀Jouer</button>
+  `;
+  document.getElementById('playBtn').onclick = startGame;
+  requestAnimationFrame(animBG);
+}
+
+function hideMenu() {
+  menuOv.style.display = 'none';
+}
+
+function togglePause(forceOff = false) {
+  if(forceOff || pauseOv.style.display === 'flex') {
+    pauseOv.style.display = 'none';
+    startCountdown(() => game = setInterval(gameLoop, 100));
+    pauseBtn.textContent = '⏸️';
+  } else {
+    clearInterval(game);
+    pauseOv.style.display = 'flex';
+    pauseBtn.textContent = '▶️';
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if(menuOv.style.display === 'flex' || cntOv.style.display === 'flex') return;
+  if(e.key.startsWith('Arrow')) setDirection(e.key.replace('Arrow', '').toUpperCase());
+  else if(e.key.toLowerCase() === 'p') togglePause();
+});
+
+function setDirection(d) {
+  if(d === 'LEFT' && direction !== 'RIGHT') direction = 'LEFT';
+  if(d === 'RIGHT' && direction !== 'LEFT') direction = 'RIGHT';
+  if(d === 'UP' && direction !== 'DOWN') direction = 'UP';
+  if(d === 'DOWN' && direction !== 'UP') direction = 'DOWN';
 }
 
 function gameOver() {
@@ -283,133 +320,31 @@ function gameOver() {
   showMenu(`GAME OVER<br>Score : ${score}`);
 }
 
-function gameLoop() {
-  let headX = snake[0].x;
-  let headY = snake[0].y;
-
-  if(direction === 'LEFT') headX -= box;
-  else if(direction === 'RIGHT') headX += box;
-  else if(direction === 'UP') headY -= box;
-  else if(direction === 'DOWN') headY += box;
-
-  if(headX < 0 || headX >= canvas.width || headY < 0 || headY >= canvas.height) return gameOver();
-
-  const newHead = {x: headX, y: headY};
-
-  if(collision(newHead, snake) || collision(newHead, obstacles)) return gameOver();
-
-  snake.unshift(newHead);
-
-  if(newHead.x === food.x && newHead.y === food.y) {
-    score++;
-    placeFood();
-  } else {
-    snake.pop();
-  }
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawSnake();
-  drawFood();
-  drawObstacles();
-
-  ctx.fillStyle = '#0f0';
-  ctx.font = '20px monospace';
-  ctx.fillText(`Score: ${score}`, 10, 25);
+const lines = [];
+for(let i = 0; i < 100; i++) {
+  lines.push({ x: Math.random() * mbgCanvas.width, y: Math.random() * mbgCanvas.height, len: Math.random() * 30 + 10, speed: Math.random() * 2 + 0.5 });
 }
 
-function startGame() {
-  hideMenu();
-  snake = [{ x: 9 * box, y: 10 * box }];
-  direction = 'RIGHT';
-  score = 0;
-  obstacleCount = parseInt(obstacleCountInput.value);
-  monsterCount = parseInt(monsterCountInput.value);
-  generateObstacles();
-  placeFood();
-  startCountdown(() => game = setInterval(gameLoop, 100));
-  canvas.focus();
-}
-
-function showMenu(content = '') {
-  menuOverlay.style.display = 'flex';
-  menuContent.innerHTML = `
-    <h1>Snake Neon</h1>
-    ${content ? `<div style="margin-bottom:10px">${content}</div>` : ''}
-    <p><strong>Règles :</strong><br>
-    Utilisez les flèches (ou le joystick mobile) pour diriger le serpent.<br>
-    Évitez les murs, obstacles et vous-même. Mangez les pommes pour grandir.<br></p>
-    <label>Couleur du serpent :</label><br/>
-    <input type="color" id="colorPicker" value="${snakeColor}"/><br/>
-    <label>Nombre d'obstacles :</label>
-    <input type="number" id="obstacleCountInput" value="7" min="0" max="30" /><br>
-    <label>Nombre de monstres :</label>
-    <input type="number" id="monsterCountInput" value="3" min="0" max="10" /><br>
-    <button id="playBtn">Jouer</button>
-  `;
-  document.getElementById('colorPicker').oninput = e => snakeColor = e.target.value;
-  document.getElementById('playBtn').onclick = startGame;
-}
-
-function hideMenu() {
-  menuOverlay.style.display = 'none';
-}
-
-function togglePause(forceOff = false) {
-  if (forceOff || pauseOverlay.style.display === 'flex') {
-    pauseOverlay.style.display = 'none';
-    startCountdown(() => game = setInterval(gameLoop, 100));
-    pauseButton.textContent = '⏸️';
-  } else {
-    if (game) clearInterval(game);
-    game = null;
-    pauseOverlay.style.display = 'flex';
-    obstacleCountInput.value = obstacleCount;
-    monsterCountInput.value = monsterCount;
-    pauseButton.textContent = '▶️';
-  }
-}
-
-function startCountdown(callback) {
-  let count = 3;
-  countdownContent.textContent = count;
-  countdownOverlay.style.display = 'flex';
-  const interval = setInterval(() => {
-    count--;
-    if (count <= 0) {
-      clearInterval(interval);
-      countdownOverlay.style.display = 'none';
-      callback();
-    } else {
-      countdownContent.textContent = count;
+function animBG() {
+  if(menuOv.style.display !== 'flex') return;
+  mbgCtx.clearRect(0, 0, mbgCanvas.width, mbgCanvas.height);
+  mbgCtx.strokeStyle = '#0f0';
+  mbgCtx.lineWidth = 1;
+  lines.forEach(l => {
+    mbgCtx.beginPath();
+    mbgCtx.moveTo(l.x, l.y);
+    mbgCtx.lineTo(l.x, l.y + l.len);
+    mbgCtx.stroke();
+    l.y += l.speed;
+    if(l.y > mbgCanvas.height) {
+      l.y = -l.len;
+      l.x = Math.random() * mbgCanvas.width;
     }
-  }, 1000);
+  });
+  requestAnimationFrame(animBG);
 }
-
-function setDirection(dir) {
-  if (dir === 'LEFT' && direction !== 'RIGHT') direction = 'LEFT';
-  if (dir === 'RIGHT' && direction !== 'LEFT') direction = 'RIGHT';
-  if (dir === 'UP' && direction !== 'DOWN') direction = 'UP';
-  if (dir === 'DOWN' && direction !== 'UP') direction = 'DOWN';
-}
-
-pauseButton.onclick = togglePause;
-resumeBtn.onclick = () => togglePause(false);
-pauseToMenuBtn.onclick = () => {
-  togglePause(true);
-  showMenu();
-};
-
-document.addEventListener('keydown', e => {
-  if(menuOverlay.style.display === 'flex') return;
-  if(e.key === 'ArrowLeft') setDirection('LEFT');
-  else if(e.key === 'ArrowRight') setDirection('RIGHT');
-  else if(e.key === 'ArrowUp') setDirection('UP');
-  else if(e.key === 'ArrowDown') setDirection('DOWN');
-  else if(e.key.toLowerCase() === 'p') togglePause();
-});
 
 showMenu();
 </script>
 </body>
 </html>
-
