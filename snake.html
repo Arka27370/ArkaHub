@@ -19,7 +19,7 @@
       position:relative; width:360px; background:rgba(0,30,0,0.85);
       border:2px solid #0f0; border-radius:10px; padding:20px; text-align:center;
     }
-    button, input[type=color], input[type=number] {
+    button, input[type=color], input[type=number], select {
       padding:10px 15px; margin:8px; border:none; border-radius:5px;
       background:#0f0; color:black; font-size:16px; cursor:pointer;
     }
@@ -71,7 +71,6 @@
   <button class="arrowBtn" onclick="setDirection('UP')">⬆️</button><br>
   <button class="arrowBtn" onclick="setDirection('DOWN')">⬇️</button>
   <button class="arrowBtn" onclick="setDirection('RIGHT')">➡️</button>
- 
 </div>
 
 <button id="musicToggle">🔈</button>
@@ -90,6 +89,8 @@ const mobCtr = document.getElementById('mobileControls');
 let snake, direction, food, score, obstacles, monsters;
 let obstacleCount, monsterCount, snakeColor, bestScore = localStorage.getItem('bestSnakeScore') || 0;
 let game = null, musicOn = false;
+let snakeSpeed = 100; // par défaut
+
 const audio = new Audio('level-iv-339695.mp3');
 audio.loop = true; audio.volume = 0.05;
 
@@ -126,6 +127,10 @@ function rndPos() {
   };
 }
 
+function collide(p, arr) {
+  return arr.some(o => o.x === p.x && o.y === p.y);
+}
+
 function generateObstacles() {
   obstacles = [];
   for(let i = 0; i < obstacleCount; i++) {
@@ -151,10 +156,6 @@ function placeFood() {
   food = p;
 }
 
-function collide(p, arr) {
-  return arr.some(o => o.x === p.x && o.y === p.y);
-}
-
 function drawGame() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
   snake.forEach((s, i) => {
@@ -176,16 +177,17 @@ function drawGame() {
   ctx.fillStyle = 'gray';
   obstacles.forEach(o => ctx.fillRect(o.x, o.y, box, box));
 
-  ctx.fillStyle = '#ff00ff';
   monsters.forEach(m => {
-    ctx.fillRect(m.x, m.y, box, box);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(m.x + 4, m.y + 5, 4, 4);
-    ctx.fillRect(m.x + 12, m.y + 5, 4, 4);
-    ctx.fillStyle = 'black';
-    ctx.fillRect(m.x + 5, m.y + 6, 2, 2);
-    ctx.fillRect(m.x + 13, m.y + 6, 2, 2);
-  });
+  ctx.fillStyle = '#ff00ff'; // Remet la couleur violette avant de dessiner chaque monstre
+  ctx.fillRect(m.x, m.y, box, box);
+  ctx.fillStyle = 'white';
+  ctx.fillRect(m.x + 4, m.y + 5, 4, 4);
+  ctx.fillRect(m.x + 12, m.y + 5, 4, 4);
+  ctx.fillStyle = 'black';
+  ctx.fillRect(m.x + 5, m.y + 6, 2, 2);
+  ctx.fillRect(m.x + 13, m.y + 6, 2, 2);
+});
+
 
   ctx.fillStyle = '#0f0';
   ctx.font = '20px monospace';
@@ -258,10 +260,14 @@ function startGame() {
   obstacleCount = parseInt(document.getElementById('obstacleCountInput').value);
   monsterCount = parseInt(document.getElementById('monsterCountInput').value);
   snakeColor = document.getElementById('colorPicker') ? document.getElementById('colorPicker').value : snakeColor;
+
+  const speedValue = document.getElementById('speedSelect').value;
+  snakeSpeed = speedValue === 'slow' ? 200 : 100;
+
   generateObstacles();
   generateMonsters();
   placeFood();
-  startCountdown(() => game = setInterval(gameLoop, 100));
+  startCountdown(() => game = setInterval(gameLoop, snakeSpeed));
   canvas.focus();
 }
 
@@ -271,14 +277,19 @@ function showMenu(msg = '') {
   pauseOv.style.display = 'none';
   menuOv.style.display = 'flex';
   menuCt.innerHTML = `
-    <h1><img src = snakelogo.png height="120" width="120"></h1>
+    <h1><img src="snakelogo.png" height="120" width="120"></h1>
     ${msg ? `<div>${msg}</div>` : ''}
     <p><strong>Règles :</strong><br> - 🧱Évitez obstacles, 👿monstres, murs et vous-même.<br>🍎Mangez les pommes rouges pour grandir.</p>
-    <p><strong> 💥Meilleur : ${bestScore}</strong></p>
+    <p><strong>💥Meilleur : ${bestScore}</strong></p>
     <label>🎨Couleur serpent :</label><br>
-    <input type="color" id="colorPicker" value="${snakeColor}"><br>
-    <label> 🧱Nb obstacles:</label><input id="obstacleCountInput" type="number" value="${obstacleCount}" min="0" max="30"><br>
-    <label> 👿Nb monstres:</label><input id="monsterCountInput" type="number" value="${monsterCount}" min="0" max="10"><br>
+    <input type="color" id="colorPicker" value="${snakeColor || '#00ff00'}"><br>
+    <label>🧱Nb obstacles :</label><input id="obstacleCountInput" type="number" value="${obstacleCount || 7}" min="0" max="30"><br>
+    <label>👿Nb monstres :</label><input id="monsterCountInput" type="number" value="${monsterCount || 3}" min="0" max="10"><br>
+    <label>🐍Vitesse du serpent :</label>
+    <select id="speedSelect">
+      <option value="normal" selected>Normale</option>
+      <option value="slow">Lente</option>
+    </select><br>
     <button id="playBtn">🚀Jouer</button>
   `;
   document.getElementById('playBtn').onclick = startGame;
@@ -292,7 +303,7 @@ function hideMenu() {
 function togglePause(forceOff = false) {
   if(forceOff || pauseOv.style.display === 'flex') {
     pauseOv.style.display = 'none';
-    startCountdown(() => game = setInterval(gameLoop, 100));
+    startCountdown(() => game = setInterval(gameLoop, snakeSpeed));
     pauseBtn.textContent = '⏸️';
   } else {
     clearInterval(game);
